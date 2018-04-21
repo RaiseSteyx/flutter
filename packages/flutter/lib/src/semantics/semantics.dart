@@ -319,7 +319,10 @@ class SemanticsProperties extends DiagnosticableTree {
     this.textField,
     this.focused,
     this.inMutuallyExclusiveGroup,
+    this.hidden,
     this.obscured,
+    this.scopesRoute,
+    this.namesRoute,
     this.label,
     this.value,
     this.increasedValue,
@@ -399,13 +402,50 @@ class SemanticsProperties extends DiagnosticableTree {
   /// For example, a radio button is in a mutually exclusive group because only
   /// one radio button in that group can be marked as [checked].
   final bool inMutuallyExclusiveGroup;
-  
+
+  /// If non-null, whether the node is considered hidden.
+  ///
+  /// Hidden elements are currently not visible on screen. They may be covered
+  /// by other elements or positioned outside of the visible area of a viewport.
+  ///
+  /// Hidden elements cannot gain accessibility focus though regular touch. The
+  /// only way they can be focused is by moving the focus to them via linear
+  /// navigation.
+  ///
+  /// Platforms are free to completely ignore hidden elements and new platforms
+  /// are encouraged to do so.
+  ///
+  /// Instead of marking an element as hidden it should usually be excluded from
+  /// the semantics tree altogether. Hidden elements are only included in the
+  /// semantics tree to work around platform limitations and they are mainly
+  /// used to implement accessibility scrolling on iOS.
+  final bool hidden;
+
   /// If non-null, whether [value] should be obscured.
   ///
   /// This option is usually set in combination with [textField] to indicate
   /// that the text field contains a password (or other sensitive information).
   /// Doing so instructs screen readers to not read out the [value].
   final bool obscured;
+
+  /// If non-null, whether the node corresponds to the root of a subtree for
+  /// which a route name should be announced.
+  /// 
+  /// Generally, this is set in combination with [explicitChildNodes], since 
+  /// nodes with this flag are not considered focusable by Android or iOS.
+  ///
+  /// See also:
+  ///
+  ///  * [SemanticsFlag.scopesRoute] for a description of how the announced
+  ///    value is selected.
+  final bool scopesRoute;
+
+  /// If non-null, whether the node contains the semantic label for a route.
+  ///
+  /// See also:
+  /// 
+  ///  * [SemanticsFlag.namesRoute] for a description of how the name is used.
+  final bool namesRoute;
 
   /// Provides a textual description of the widget.
   ///
@@ -1421,6 +1461,7 @@ class SemanticsNode extends AbstractNode with DiagnosticableTreeMixin {
     final List<String> flags = SemanticsFlag.values.values.where((SemanticsFlag flag) => _hasFlag(flag)).map((SemanticsFlag flag) => flag.toString().substring('SemanticsFlag.'.length)).toList();
     properties.add(new IterableProperty<String>('flags', flags, ifEmpty: null));
     properties.add(new FlagProperty('isInvisible', value: isInvisible, ifTrue: 'invisible'));
+    properties.add(new FlagProperty('isHidden', value: _hasFlag(SemanticsFlag.isHidden), ifTrue: 'HIDDEN'));
     properties.add(new StringProperty('label', _label, defaultValue: ''));
     properties.add(new StringProperty('value', _value, defaultValue: ''));
     properties.add(new StringProperty('increasedValue', _increasedValue, defaultValue: ''));
@@ -2336,6 +2377,25 @@ class SemanticsConfiguration {
     _hasBeenAnnotated = true;
   }
 
+  /// Whether the semantics node is the root of a subtree for which values
+  /// should be announced.
+  /// 
+  /// See also:
+  ///  * [SemanticsFlag.scopesRoute], for a full description of route scoping.
+  bool get scopesRoute => _hasFlag(SemanticsFlag.scopesRoute);
+  set scopesRoute(bool value) {
+    _setFlag(SemanticsFlag.scopesRoute, value);
+  }
+
+  /// Whether the semantics node contains the label of a route.
+  /// 
+  /// See also:
+  ///  * [SemanticsFlag.namesRoute], for a full description of route naming.
+  bool get namesRoute => _hasFlag(SemanticsFlag.namesRoute);
+  set namesRoute(bool value) {
+    _setFlag(SemanticsFlag.namesRoute, value);
+  }
+
   /// The reading direction for the text in [label], [value], [hint],
   /// [increasedValue], and [decreasedValue].
   TextDirection get textDirection => _textDirection;
@@ -2408,6 +2468,27 @@ class SemanticsConfiguration {
   bool get isHeader => _hasFlag(SemanticsFlag.isHeader);
   set isHeader(bool value) {
     _setFlag(SemanticsFlag.isHeader, value);
+  }
+
+  /// Whether the owning [RenderObject] is considered hidden.
+  ///
+  /// Hidden elements are currently not visible on screen. They may be covered
+  /// by other elements or positioned outside of the visible area of a viewport.
+  ///
+  /// Hidden elements cannot gain accessibility focus though regular touch. The
+  /// only way they can be focused is by moving the focus to them via linear
+  /// navigation.
+  ///
+  /// Platforms are free to completely ignore hidden elements and new platforms
+  /// are encouraged to do so.
+  ///
+  /// Instead of marking an element as hidden it should usually be excluded from
+  /// the semantics tree altogether. Hidden elements are only included in the
+  /// semantics tree to work around platform limitations and they are mainly
+  /// used to implement accessibility scrolling on iOS.
+  bool get isHidden => _hasFlag(SemanticsFlag.isHidden);
+  set isHidden(bool value) {
+    _setFlag(SemanticsFlag.isHidden, value);
   }
 
   /// Whether the owning [RenderObject] is a text field.

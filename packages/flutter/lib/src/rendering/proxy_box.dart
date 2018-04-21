@@ -3019,6 +3019,9 @@ class RenderSemanticsAnnotations extends RenderProxyBox {
     bool focused,
     bool inMutuallyExclusiveGroup,
     bool obscured,
+    bool scopesRoute,
+    bool namesRoute,
+    bool hidden,
     String label,
     String value,
     String increasedValue,
@@ -3054,6 +3057,9 @@ class RenderSemanticsAnnotations extends RenderProxyBox {
        _focused = focused,
        _inMutuallyExclusiveGroup = inMutuallyExclusiveGroup,
        _obscured = obscured,
+       _scopesRoute = scopesRoute,
+       _namesRoute = namesRoute,
+       _hidden = hidden,
        _label = label,
        _value = value,
        _increasedValue = increasedValue,
@@ -3210,6 +3216,37 @@ class RenderSemanticsAnnotations extends RenderProxyBox {
     if (obscured == value)
       return;
     _obscured = value;
+    markNeedsSemanticsUpdate();
+  }
+
+  /// If non-null, sets the [SemanticsNode.scopesRoute] semantic to the give value.
+  bool get scopesRoute => _scopesRoute;
+  bool _scopesRoute;
+  set scopesRoute(bool value) {
+    if (scopesRoute == value)
+      return;
+    _scopesRoute = value;
+    markNeedsSemanticsUpdate();
+  }
+
+  /// If non-null, sets the [SemanticsNode.namesRoute] semantic to the give value.
+  bool get namesRoute => _namesRoute;
+  bool _namesRoute;
+  set namesRoute(bool value) {
+    if (_namesRoute == value)
+      return;
+    _namesRoute = value;
+    markNeedsSemanticsUpdate();
+  }
+
+  /// If non-null, sets the [SemanticsNode.isHidden] semantic to the given
+  /// value.
+  bool get hidden => _hidden;
+  bool _hidden;
+  set hidden(bool value) {
+    if (hidden == value)
+      return;
+    _hidden = value;
     markNeedsSemanticsUpdate();
   }
 
@@ -3633,6 +3670,8 @@ class RenderSemanticsAnnotations extends RenderProxyBox {
     super.describeSemanticsConfiguration(config);
     config.isSemanticBoundary = container;
     config.explicitChildNodes = explicitChildNodes;
+    assert((scopesRoute == true && explicitChildNodes == true) || scopesRoute != true,
+      'explicitChildNodes must be set to true if scopes route is true');
 
     if (enabled != null)
       config.isEnabled = enabled;
@@ -3652,6 +3691,8 @@ class RenderSemanticsAnnotations extends RenderProxyBox {
       config.isInMutuallyExclusiveGroup = inMutuallyExclusiveGroup;
     if (obscured != null)
       config.isObscured = obscured;
+    if (hidden != null)
+      config.isHidden = hidden;
     if (label != null)
       config.label = label;
     if (value != null)
@@ -3662,6 +3703,10 @@ class RenderSemanticsAnnotations extends RenderProxyBox {
       config.decreasedValue = decreasedValue;
     if (hint != null)
       config.hint = hint;
+    if (scopesRoute != null)
+      config.scopesRoute = scopesRoute;
+    if (namesRoute != null)
+      config.namesRoute = namesRoute;
     if (textDirection != null)
       config.textDirection = textDirection;
     if (sortKey != null)
